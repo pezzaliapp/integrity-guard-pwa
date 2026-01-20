@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Integrity Guard – PWA</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b0f0d">
+  <style>
+    body{background:#0b0f0d;color:#d7ffdd;font-family:system-ui;margin:0}
+    .wrap{max-width:980px;margin:auto;padding:20px}
+    input,button,textarea{width:100%;margin:6px 0;padding:8px;font:inherit}
+    textarea{height:140px;font-family:ui-monospace,Menlo,Monaco,Consolas,monospace}
+    .row{display:flex;gap:10px;align-items:center}
+    .row>*{flex:1}
+    .small{opacity:.85;font-size:13px;line-height:1.4}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border-bottom:1px solid rgba(215,255,221,.18);padding:8px;vertical-align:top}
+    th{opacity:.9;text-align:left}
+    code{font-family:ui-monospace,Menlo,Monaco,Consolas,monospace;font-size:12px}
+    .ok{color:#7CFF9C}
+    .bad{color:#FF8A8A}
+    .warn{color:#FFD27A}
+    .pill{display:inline-block;padding:2px 8px;border:1px solid rgba(215,255,221,.25);border-radius:999px;font-size:12px;opacity:.95}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Integrity Guard – PWA</h1>
+    <p class="small">
+      Verifica integrità (SHA-256) degli asset pubblicati su un URL base.
+      Funziona al meglio su domini che permettono CORS (es. le tue app su alessandropezzali.it / GitHub Pages).
+    </p>
+
+    <div class="row">
+      <input id="base" placeholder="Base URL (es: https://www.alessandropezzali.it/trusting-trust-pwa/)" />
+      <button id="load">Carica manifest</button>
+    </div>
+
+    <p class="small">
+      Modalità standard: il sito target espone <code>integrity.json</code> (hash attesi).<br/>
+      In alternativa puoi incollare tu una lista file (uno per riga) e fare una verifica “reale vs reale” (senza attesi).
+    </p>
+
+    <details>
+      <summary class="small"><span class="pill">Opzionale</span> Lista file manuale (uno per riga)</summary>
+      <textarea id="files" placeholder="index.html&#10;app.js&#10;sw.js&#10;manifest.webmanifest"></textarea>
+    </details>
+
+    <div class="row">
+      <button id="verify">Verifica</button>
+      <button id="clear">Reset</button>
+    </div>
+
+    <div id="summary" class="small"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Atteso (da integrity.json)</th>
+          <th>Reale (SHA-256)</th>
+          <th>Esito</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <script>
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>
