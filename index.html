@@ -22,6 +22,17 @@
     .bad{color:#FF8A8A}
     .warn{color:#FFD27A}
     .pill{display:inline-block;padding:2px 8px;border:1px solid rgba(215,255,221,.25);border-radius:999px;font-size:12px;opacity:.95}
+
+    /* Nota editoriale (CORS) */
+    .note{
+      margin:10px 0 12px 0;
+      padding:10px 12px;
+      border-left:3px solid rgba(215,255,221,.35);
+      background:rgba(0,0,0,.25);
+      border-radius:10px;
+    }
+    .note strong{opacity:.95}
+    .note em{opacity:.95}
   </style>
 </head>
 <body>
@@ -36,6 +47,17 @@
       <input id="base" placeholder="Base URL (es: https://www.alessandropezzali.it/trusting-trust-pwa/)" />
       <button id="load">Carica manifest</button>
     </div>
+
+    <!-- ✅ Spiegazione visibile nel browser -->
+    <p class="small note">
+      <strong>Nota sulla verifica cross-domain</strong><br>
+      Questa PWA verifica i file scaricandoli direttamente dal browser (fetch).<br>
+      Per motivi di sicurezza, il browser <em>blocca l’accesso a domini esterni</em>
+      se il sito target non consente richieste cross-origin (CORS).<br><br>
+      ✅ Funziona sempre sullo <strong>stesso dominio</strong><br>
+      ⚠️ Su domini esterni funziona solo se il target abilita CORS<br>
+      ❌ In caso contrario vedrai “Failed to fetch”: <em>non è un errore dell’app</em>
+    </p>
 
     <p class="small">
       Modalità standard: il sito target espone <code>integrity.json</code> (hash attesi).<br/>
