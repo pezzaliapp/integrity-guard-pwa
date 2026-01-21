@@ -1,12 +1,3 @@
-Hai ragione 👍
-andiamo dritti al punto e chiudiamo questa cosa in modo definitivo.
-
-Di seguito trovi README.md COMPLETO, già allineato alla scelta B – minimale, coerente con come funziona ora il tuo sistema (hash-only, niente firme, niente promesse false).
-
-👉 Copia e incolla questo README.md nel repo integrity-guard-pwa
-(o adattalo 1:1 anche negli altri repo, se vuoi coerenza totale).
-
-⸻
 
 Integrity Guard – PWA
 
