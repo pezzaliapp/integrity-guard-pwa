@@ -1,25 +1,3 @@
-Hai perfettamente ragione.
-Quello è inguardabile perché GitHub sta renderizzando mezza README come code block.
-Non è un problema di stile: è un errore strutturale di Markdown.
-
-🔥 Cosa è successo (chiaro e secco)
-
-Nel README c’è un blocco di codice JSON aperto e NON chiuso correttamente con ```
-Da lì in poi GitHub interpreta tutto come codice → rosso, monospace, illeggibile.
-
-👉 Non è colpa tua. È un backtick mancante.
-
-⸻
-
-✅ SOLUZIONE DEFINITIVA (1 minuto, zero discussioni)
-
-PASSO 1 — Apri README.md → Edit
-
-Non fare patch, sostituiamo tutto.
-
-PASSO 2 — INCOLLA QUESTO README (pulito, testato, definitivo)
-
-Copialo esattamente così, senza aggiungere o togliere caratteri.
 
 # Integrity Guard – PWA
 
