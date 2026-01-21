@@ -1,11 +1,3 @@
-Perfetto, feedback chiarissimo 👍
-hai ragione: il contenuto è giusto, la resa è brutta. Sistemiamolo subito.
-
-Qui sotto trovi README.md COMPLETO, RISCRITTO SOLO IN MARKDOWN, pulito, leggibile, con gerarchia visiva corretta su GitHub (titoli, liste, separatori).
-👉 Sostituisci tutto il README.md con questo, senza modificare nulla.
-
-⸻
-
 
 # Integrity Guard – PWA
 
