@@ -1,97 +1,106 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
   <title>Integrity Guard – PWA</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0b0f0d">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0f0c" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <style>
-    body{background:#0b0f0d;color:#d7ffdd;font-family:system-ui;margin:0}
-    .wrap{max-width:980px;margin:auto;padding:20px}
-    input,button,textarea{width:100%;margin:6px 0;padding:8px;font:inherit}
-    textarea{height:140px;font-family:ui-monospace,Menlo,Monaco,Consolas,monospace}
-    .row{display:flex;gap:10px;align-items:center}
-    .row>*{flex:1}
-    .small{opacity:.85;font-size:13px;line-height:1.4}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{border-bottom:1px solid rgba(215,255,221,.18);padding:8px;vertical-align:top}
-    th{opacity:.9;text-align:left}
-    code{font-family:ui-monospace,Menlo,Monaco,Consolas,monospace;font-size:12px}
-    .ok{color:#7CFF9C}
-    .bad{color:#FF8A8A}
-    .warn{color:#FFD27A}
-    .pill{display:inline-block;padding:2px 8px;border:1px solid rgba(215,255,221,.25);border-radius:999px;font-size:12px;opacity:.95}
-
-    /* Nota editoriale (CORS) */
-    .note{
-      margin:10px 0 12px 0;
-      padding:10px 12px;
-      border-left:3px solid rgba(215,255,221,.35);
-      background:rgba(0,0,0,.25);
-      border-radius:10px;
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0b0f0c;
+      color: #e6f2ea;
     }
-    .note strong{opacity:.95}
-    .note em{opacity:.95}
+    main {
+      max-width: 900px;
+      margin: auto;
+      padding: 32px;
+    }
+    h1 {
+      margin-top: 0;
+      color: #9fe3c3;
+    }
+    input, button, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+    button {
+      background: #1e2f27;
+      color: #e6f2ea;
+      border: 1px solid #3a5c4b;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #264036;
+    }
+    .note {
+      background: #111916;
+      border-left: 4px solid #3a5c4b;
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    th, td {
+      border-bottom: 1px solid #2a3f35;
+      padding: 8px;
+      text-align: left;
+      font-size: 14px;
+    }
+    .warn {
+      color: #f5c16c;
+    }
+    .ok {
+      color: #9fe3c3;
+    }
+    .err {
+      color: #ff8a8a;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Integrity Guard – PWA</h1>
-    <p class="small">
-      Verifica integrità (SHA-256) degli asset pubblicati su un URL base.
-      Funziona al meglio su domini che permettono CORS (es. le tue app su alessandropezzali.it / GitHub Pages).
-    </p>
+<main>
+  <h1>Integrity Guard – PWA</h1>
 
-    <div class="row">
-      <input id="base" placeholder="Base URL (es: https://www.alessandropezzali.it/trusting-trust-pwa/)" />
-      <button id="load">Carica manifest</button>
-    </div>
+  <p>
+    Verifica <strong>SHA-256</strong> degli asset pubblicati su un URL base.<br>
+    <strong>Modalità definitiva:</strong> hash-only (come ieri sera).
+  </p>
 
-    <!-- ✅ Spiegazione visibile nel browser -->
-    <p class="small note">
-      <strong>Nota sulla verifica cross-domain</strong><br>
-      Questa PWA verifica i file scaricandoli direttamente dal browser (fetch).<br>
-      Per motivi di sicurezza, il browser <em>blocca l’accesso a domini esterni</em>
-      se il sito target non consente richieste cross-origin (CORS).<br><br>
-      ✅ Funziona sempre sullo <strong>stesso dominio</strong><br>
-      ⚠️ Su domini esterni funziona solo se il target abilita CORS<br>
-      ❌ In caso contrario vedrai “Failed to fetch”: <em>non è un errore dell’app</em>
-    </p>
-
-    <p class="small">
-  Modalità standard: il sito target espone <code>integrity.json</code> + <code>integrity.sig</code> (firma Ed25519 verificabile).<br/>
-  Se la firma non è valida, la verifica viene rifiutata.
-</p>
-
-    <details>
-      <summary class="small"><span class="pill">Opzionale</span> Lista file manuale (uno per riga)</summary>
-      <textarea id="files" placeholder="index.html&#10;app.js&#10;sw.js&#10;manifest.webmanifest"></textarea>
-    </details>
-
-    <div class="row">
-      <button id="verify">Verifica</button>
-      <button id="clear">Reset</button>
-    </div>
-
-    <div id="summary" class="small"></div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>File</th>
-          <th>Atteso (da integrity.json)</th>
-          <th>Reale (SHA-256)</th>
-          <th>Esito</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+  <div class="note">
+    ✅ Nessuna firma richiesta<br>
+    ✅ Nessun blocco se manca integrity.sig<br>
+    ⚠️ La firma crittografica è fuori scope (Trusting Trust reale ≠ browser)
   </div>
 
-  <script>
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
-  </script>
-  <script src="app.js"></script>
+  <label>URL base (finire con /)</label>
+  <input id="baseUrl" value="https://www.alessandropezzali.it/trusting-trust-pwa/" />
+
+  <button onclick="verify()">Verifica</button>
+
+  <div id="status"></div>
+
+  <table id="results" hidden>
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>SHA-256 reale</th>
+        <th>Esito</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<script src="app.js"></script>
 </body>
 </html>
