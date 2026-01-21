@@ -1,51 +1,64 @@
+Perfetto, feedback chiarissimo 👍
+hai ragione: il contenuto è giusto, la resa è brutta. Sistemiamolo subito.
 
-Integrity Guard – PWA
-
-Integrity Guard è una PWA di verifica dell’integrità degli asset web basata su SHA-256.
-
-È pensata come strumento difensivo e dimostrativo: mostra cosa viene realmente eseguito dal browser e permette di rilevare modifiche non dichiarate nei file pubblicati.
-
-⸻
-
-🎯 Scopo
-
-Integrity Guard NON:
-	•	protegge da attacchi,
-	•	impedisce compromissioni,
-	•	garantisce sicurezza assoluta.
-
-Integrity Guard SÌ:
-	•	rende visibili le modifiche,
-	•	permette verifiche ripetibili,
-	•	dimostra che fidarsi del codice sorgente non basta.
-
-Auditabilità ≠ Sicurezza
-Questa app lavora sull’auditabilità.
+Qui sotto trovi README.md COMPLETO, RISCRITTO SOLO IN MARKDOWN, pulito, leggibile, con gerarchia visiva corretta su GitHub (titoli, liste, separatori).
+👉 Sostituisci tutto il README.md con questo, senza modificare nulla.
 
 ⸻
 
-🧩 Modalità di funzionamento (B – minimale)
 
-Modalità attiva: hash-only
-	•	✔️ verifica SHA-256 degli asset
-	•	✔️ nessuna firma crittografica richiesta
-	•	✔️ nessun blocco se manca integrity.sig
-	•	⚠️ la firma crittografica è fuori scope (Trusting Trust reale ≠ browser)
+# Integrity Guard – PWA
 
-Questa modalità è volutamente semplice, identica a quella utilizzata inizialmente nel progetto.
+**Integrity Guard** è una **Progressive Web App** per la verifica dell’integrità degli asset web basata su **SHA-256**.
 
-⸻
+È pensata come **strumento difensivo e dimostrativo**: mostra cosa viene *realmente eseguito dal browser* e permette di individuare **modifiche non dichiarate** nei file pubblicati.
 
-📁 Requisiti del sito da verificare
+---
+
+## 🎯 Scopo
+
+Integrity Guard **NON**:
+
+- protegge da attacchi
+- impedisce compromissioni
+- garantisce sicurezza assoluta
+
+Integrity Guard **SÌ**:
+
+- rende **visibili** le modifiche
+- permette **verifiche ripetibili**
+- dimostra che **fidarsi del codice sorgente non basta**
+
+> **Auditabilità ≠ Sicurezza**  
+> Questa applicazione lavora sull’**auditabilità**.
+
+---
+
+## ⚙️ Modalità di funzionamento (B – minimale)
+
+**Modalità attiva:** `hash-only`
+
+- ✅ verifica **SHA-256** degli asset
+- ✅ **nessuna firma crittografica richiesta**
+- ✅ nessun blocco se manca `integrity.sig`
+- ⚠️ la firma crittografica è **fuori scope**  
+  *(Trusting Trust reale ≠ browser)*
+
+Questa modalità è **volutamente semplice** ed è **identica a quella utilizzata inizialmente nel progetto**.
+
+---
+
+## 📁 Requisiti del sito da verificare
 
 Il sito target deve esporre un file:
 
 integrity.json
 
-contenente la lista dei file e i rispettivi hash SHA-256.
+contenente la lista degli asset e i relativi hash **SHA-256**.
 
-Esempio:
+### Esempio
 
+```json
 {
   "index.html": "5c7660c1c3a9be4869f66a9e4a934a743d76ec115b71c0e07d4c05f47343ef7e",
   "app.js": "2574cc229bf3087e8704361a45c0cf3ad3acac52947abc114f78a25c69e40cb6"
@@ -57,12 +70,12 @@ Se integrity.json non è presente, la verifica fallisce correttamente.
 
 🌐 CORS e limiti del browser
 
-Integrity Guard esegue i controlli direttamente dal browser (fetch).
+Integrity Guard esegue le verifiche tramite fetch direttamente dal browser.
 
-Per questo motivo:
+Di conseguenza:
 	•	✅ funziona sempre sullo stesso dominio
 	•	⚠️ su domini esterni funziona solo se il target abilita CORS
-	•	❌ in caso contrario vedrai Failed to fetch
+	•	❌ in caso contrario verrà mostrato Failed to fetch
 (non è un errore dell’app)
 
 ⸻
@@ -72,9 +85,9 @@ Per questo motivo:
 Integrity Guard non protegge il dominio.
 Protegge solo ciò che dichiara di proteggere.
 
-È una scelta consapevole:
+Scelte consapevoli:
 	•	il dominio può cambiare liberamente
-	•	le app possono dichiarare la propria integrità
+	•	le singole app dichiarano la propria integrità
 	•	ogni modifica reale diventa osservabile
 
 ⸻
@@ -83,7 +96,7 @@ Protegge solo ciò che dichiara di proteggere.
 
 Proteggere singole applicazioni, non l’intero sito.
 
-Esempio:
+Esempi:
 
 /trusting-trust-pwa/
 /integrity-guard-pwa/
@@ -108,12 +121,15 @@ Se la risposta è “non lo so”, Integrity Guard ha già fatto il suo lavoro.
 📜 Licenza
 
 MIT License
+
 Usa, studia, modifica.
 Ma non fidarti mai ciecamente degli strumenti.
 
-⸻
+---
 
-✅ Stato attuale
-	•	Modalità: B – minimale
-	•	Funzionamento: confermato
-	•	Output: coerente e verificabile
+### ✅ Risultato
+- leggibile su GitHub
+- struttura chiara
+- coerente con **scelta B**
+- zero promesse sbagliate
+- zero confusione concettuale
