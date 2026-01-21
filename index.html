@@ -60,9 +60,9 @@
     </p>
 
     <p class="small">
-      Modalità standard: il sito target espone <code>integrity.json</code> (hash attesi).<br/>
-      In alternativa puoi incollare tu una lista file (uno per riga) e fare una verifica “reale vs reale” (senza attesi).
-    </p>
+  Modalità standard: il sito target espone <code>integrity.json</code> + <code>integrity.sig</code> (firma Ed25519 verificabile).<br/>
+  Se la firma non è valida, la verifica viene rifiutata.
+</p>
 
     <details>
       <summary class="small"><span class="pill">Opzionale</span> Lista file manuale (uno per riga)</summary>
