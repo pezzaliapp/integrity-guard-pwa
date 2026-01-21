@@ -1,23 +1,30 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  const state = {
-    expected: null,   // { files: { "app.js": "<sha256>", ... }, meta: {...} }
-    fileList: null
-  };
+  const state = { expected: null, fileList: null };
 
   function normalizeBase(url) {
     url = (url || "").trim();
     if (!url) return "";
-    // se manca slash finale, aggiungilo
     if (!url.endsWith("/")) url += "/";
     return url;
   }
-
   function join(base, path) {
     base = normalizeBase(base);
     path = (path || "").replace(/^\//, "");
     return base + path;
+  }
+
+  async function fetchTextNoStore(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    return await res.text();
+  }
+
+  async function fetchBytesNoStore(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    return new Uint8Array(await res.arrayBuffer());
   }
 
   async function sha256(text) {
@@ -29,7 +36,6 @@
   function setSummary(html) {
     $("summary").innerHTML = html || "";
   }
-
   function clearTable() {
     $("rows").innerHTML = "";
   }
@@ -59,67 +65,99 @@
     $("rows").appendChild(tr);
   }
 
-  async function fetchTextNoStore(url) {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-    return await res.text();
-  }
-
-  async function loadIntegrityManifest(base) {
-    const url = join(base, "integrity.json");
-    const txt = await fetchTextNoStore(url);
-    let json;
-    try { json = JSON.parse(txt); } catch {
-      throw new Error("integrity.json non è JSON valido");
-    }
-    if (!json || typeof json !== "object") throw new Error("integrity.json non valido");
-    if (!json.files || typeof json.files !== "object") throw new Error("integrity.json: manca files{}");
-    return json;
-  }
-
   function manualFiles() {
     const raw = $("files").value || "";
     const list = raw.split("\n").map(s => s.trim()).filter(Boolean);
     return list.length ? list : null;
   }
 
+  async function importPublicKeyFromPem(pemText) {
+    const b64 = pemText
+      .replace(/-----BEGIN PUBLIC KEY-----/g, "")
+      .replace(/-----END PUBLIC KEY-----/g, "")
+      .replace(/\s+/g, "");
+    const bin = atob(b64);
+    const bytes = new Uint8Array([...bin].map(c => c.charCodeAt(0)));
+    return await crypto.subtle.importKey(
+      "spki",
+      bytes,
+      { name: "Ed25519" },
+      true,
+      ["verify"]
+    );
+  }
+
+  function b64ToBytes(b64) {
+    const bin = atob((b64 || "").trim());
+    return new Uint8Array([...bin].map(c => c.charCodeAt(0)));
+  }
+
+  async function verifySignatureEd25519(integrityJsonBytes, sigB64, publicKeyPemText) {
+    const pubKey = await importPublicKeyFromPem(publicKeyPemText);
+    const sigBytes = b64ToBytes(sigB64);
+    return await crypto.subtle.verify(
+      { name: "Ed25519" },
+      pubKey,
+      sigBytes,
+      integrityJsonBytes
+    );
+  }
+
+  async function loadSignedManifest(base) {
+    // carichiamo manifest + firma + public key
+    const [integrityJsonText, sigText, pubPem] = await Promise.all([
+      fetchTextNoStore(join(base, "integrity.json")),
+      fetchTextNoStore(join(base, "integrity.sig")),
+      fetchTextNoStore("public-key.pem")
+    ]);
+
+    const integrityJsonBytes = new TextEncoder().encode(integrityJsonText);
+    const ok = await verifySignatureEd25519(integrityJsonBytes, sigText, pubPem);
+
+    if (!ok) throw new Error("Firma NON valida (integrity.sig)");
+
+    let json;
+    try { json = JSON.parse(integrityJsonText); } catch {
+      throw new Error("integrity.json non è JSON valido");
+    }
+    if (!json?.files || typeof json.files !== "object") throw new Error("integrity.json: manca files{}");
+
+    json.__signatureVerified = true;
+    return json;
+  }
+
   async function verify() {
     const base = normalizeBase($("base").value);
-    if (!base) {
-      setSummary(`<span class="bad">Inserisci un Base URL.</span>`);
-      return;
-    }
+    if (!base) { setSummary(`<span class="bad">Inserisci un Base URL.</span>`); return; }
 
     clearTable();
     setSummary(`Verifica in corso…`);
 
-    // 1) prova a caricare integrity.json (attesi)
     let expected = null;
     try {
-      expected = await loadIntegrityManifest(base);
+      expected = await loadSignedManifest(base);
       state.expected = expected;
     } catch (e) {
       state.expected = null;
-    }
-
-    // 2) determina lista file
-    let files = manualFiles();
-    if (!files && state.expected) {
-      files = Object.keys(state.expected.files);
-    }
-    if (!files || !files.length) {
-      setSummary(`<span class="bad">Nessuna lista file disponibile.</span><br/><span class="small">Aggiungi integrity.json sul target oppure incolla la lista file manuale.</span>`);
+      setSummary(`
+        <span class="bad">Manifest non verificabile.</span>
+        <div class="small">${escapeHtml(e.message)}</div>
+        <div class="small">Serve <code>integrity.json</code> + <code>integrity.sig</code> firmati (Ed25519) e accessibili dal browser.</div>
+      `);
       return;
     }
 
-    // 3) verifica
-    let ok = 0, bad = 0, warn = 0;
+    let files = manualFiles();
+    if (!files) files = Object.keys(state.expected.files);
+    if (!files?.length) { setSummary(`<span class="bad">Nessuna lista file disponibile.</span>`); return; }
+
+    let okCount = 0, bad = 0, warn = 0;
 
     for (const file of files) {
       const url = join(base, file);
-      let actual = null;
-      let exp = state.expected?.files?.[file] || null;
+      const exp = state.expected.files[file] || null;
 
+      let actual = null;
       try {
         const txt = await fetchTextNoStore(url);
         actual = await sha256(txt);
@@ -131,32 +169,25 @@
 
       if (!exp) {
         warn++;
-        addRow({ file, expected: null, actual, status: "warn", note: "Nessun hash atteso (integrity.json mancante o file non incluso)" });
+        addRow({ file, expected: null, actual, status: "warn", note: "File non presente in integrity.json" });
         continue;
       }
 
-      if (actual === exp) {
-        ok++;
-        addRow({ file, expected: exp, actual, status: "ok" });
-      } else {
-        bad++;
-        addRow({ file, expected: exp, actual, status: "bad" });
-      }
+      if (actual === exp) { okCount++; addRow({ file, expected: exp, actual, status: "ok" }); }
+      else { bad++; addRow({ file, expected: exp, actual, status: "bad" }); }
     }
 
     const meta = state.expected?.meta;
-    const metaLine = meta ? `<div class="small">Target meta: <code>${escapeHtml(JSON.stringify(meta))}</code></div>` : "";
-
     setSummary(`
       <div><span class="pill">Base</span> <code>${escapeHtml(base)}</code></div>
+      <div style="margin-top:6px"><span class="ok">Firma:</span> ✅ valida (Ed25519)</div>
       <div style="margin-top:6px">
-        <span class="ok">OK:</span> ${ok} &nbsp; 
-        <span class="bad">MISMATCH:</span> ${bad} &nbsp; 
+        <span class="ok">OK:</span> ${okCount} &nbsp;
+        <span class="bad">MISMATCH:</span> ${bad} &nbsp;
         <span class="warn">WARN:</span> ${warn}
       </div>
       ${bad ? `<div class="bad" style="margin-top:6px">Attenzione: almeno un file non coincide con l’atteso.</div>` : ""}
-      ${!state.expected ? `<div class="warn" style="margin-top:6px">Nota: integrity.json non disponibile (o bloccato da CORS). Mostro solo hash reali/avvisi.</div>` : ""}
-      ${metaLine}
+      ${meta ? `<div class="small" style="margin-top:6px">Meta: <code>${escapeHtml(JSON.stringify(meta))}</code></div>` : ""}
     `);
   }
 
@@ -164,26 +195,6 @@
     return String(s).replace(/[&<>"']/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
     }[c]));
-  }
-
-  async function load() {
-    const base = normalizeBase($("base").value);
-    if (!base) {
-      setSummary(`<span class="bad">Inserisci un Base URL.</span>`);
-      return;
-    }
-    setSummary("Carico integrity.json…");
-    clearTable();
-    try {
-      const m = await loadIntegrityManifest(base);
-      state.expected = m;
-      const files = Object.keys(m.files);
-      $("files").value = files.join("\n");
-      setSummary(`<span class="ok">Manifest caricato.</span> <span class="small">File: ${files.length}. Ora premi “Verifica”.</span>`);
-    } catch (e) {
-      state.expected = null;
-      setSummary(`<span class="warn">Impossibile caricare integrity.json.</span> <span class="small">${escapeHtml(e.message)} (possibile CORS). Puoi usare la lista file manuale.</span>`);
-    }
   }
 
   function reset() {
@@ -194,7 +205,6 @@
   }
 
   window.addEventListener("DOMContentLoaded", () => {
-    $("load").onclick = load;
     $("verify").onclick = verify;
     $("clear").onclick = reset;
 
