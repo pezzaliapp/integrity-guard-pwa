@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ed25519 Keygen – Integrity Guard</title>
+  <style>
+    body{background:#0b0f0d;color:#d7ffdd;font-family:system-ui;margin:0}
+    .wrap{max-width:980px;margin:auto;padding:20px}
+    button,textarea{width:100%;margin:6px 0;padding:10px;font:inherit}
+    textarea{height:220px;font-family:ui-monospace,Menlo,Monaco,Consolas,monospace;font-size:12px}
+    .small{opacity:.85;font-size:13px;line-height:1.4}
+    .pill{display:inline-block;padding:2px 8px;border:1px solid rgba(215,255,221,.25);border-radius:999px;font-size:12px;opacity:.95}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Ed25519 Keygen <span class="pill">No terminale</span></h1>
+    <p class="small">
+      Genera una coppia chiavi Ed25519 in locale (browser).<br>
+      <strong>NON condividere la private key</strong> (va nei GitHub Secrets). La public key è pubblica.
+    </p>
+
+    <button id="gen">Genera chiavi</button>
+
+    <p class="small"><strong>PRIVATE KEY (PKCS8 PEM)</strong> → mettila in GitHub Secret: <code>ED25519_PRIVATE_KEY_PEM</code></p>
+    <textarea id="priv" readonly></textarea>
+
+    <p class="small"><strong>PUBLIC KEY (SPKI PEM)</strong> → mettila nel repo (file <code>public-key.pem</code>)</p>
+    <textarea id="pub" readonly></textarea>
+
+    <p class="small" id="hint"></p>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function toPem(b64, label) {
+      const lines = b64.match(/.{1,64}/g) || [];
+      return `-----BEGIN ${label}-----\n${lines.join("\n")}\n-----END ${label}-----\n`;
+    }
+
+    async function exportKey(key, format) {
+      const ab = await crypto.subtle.exportKey(format, key);
+      const bytes = new Uint8Array(ab);
+      let bin = "";
+      for (const b of bytes) bin += String.fromCharCode(b);
+      return btoa(bin);
+    }
+
+    $("gen").onclick = async () => {
+      $("hint").textContent = "Genero…";
+      $("priv").value = "";
+      $("pub").value = "";
+
+      // Ed25519 (WebCrypto)
+      const kp = await crypto.subtle.generateKey(
+        { name: "Ed25519" },
+        true,
+        ["sign", "verify"]
+      );
+
+      const privB64 = await exportKey(kp.privateKey, "pkcs8");
+      const pubB64  = await exportKey(kp.publicKey,  "spki");
+
+      $("priv").value = toPem(privB64, "PRIVATE KEY");
+      $("pub").value  = toPem(pubB64,  "PUBLIC KEY");
+
+      $("hint").innerHTML =
+        'Fatto. Ora: 1) copia la PRIVATE KEY nei <strong>Secrets</strong> della repo <em>trusting-trust-pwa</em>. ' +
+        '2) crea <code>public-key.pem</code> (in repo) con la PUBLIC KEY.';
+    };
+  </script>
+</body>
+</html>
